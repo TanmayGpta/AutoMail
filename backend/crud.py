@@ -2,22 +2,21 @@ from sqlalchemy.orm import Session
 from models import ClientMailStatus
 from datetime import datetime
 
-def upsert_client_status(db: Session, client_id: str):
-    record = db.query(ClientMailStatus).filter_by(client_id=client_id).first()
-    if record:
-        record.unread = True
-        record.last_updated = datetime.utcnow()
+def upsert_client_status(db, client_id, mail_date=None):
+    existing = db.query(ClientMailStatus).filter_by(client_id=client_id).first()
+
+    if existing:
+        existing.unread = True  # ✅ Explicitly mark unread
+        existing.last_updated = datetime.utcnow()
+        if mail_date:
+            existing.mail_date = mail_date
     else:
-        record = ClientMailStatus(client_id=client_id)
-        db.add(record)
+        new_entry = ClientMailStatus(
+            client_id=client_id,
+            unread=True,  # ✅ Important!
+            mail_date=mail_date,
+            last_updated=datetime.utcnow()
+        )
+        db.add(new_entry)
+
     db.commit()
-    return record
-
-def get_unread_clients(db: Session):
-    return db.query(ClientMailStatus).filter_by(unread=True).all()
-
-def mark_as_read(db: Session, client_id: str):
-    record = db.query(ClientMailStatus).filter_by(client_id=client_id).first()
-    if record:
-        record.unread = False
-        db.commit()

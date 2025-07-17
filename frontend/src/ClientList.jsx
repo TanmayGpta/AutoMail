@@ -54,9 +54,14 @@ function ClientList() {
               <td style={tdStyle}>{client["Client ID"]}</td>
               <td style={tdStyle}>{client["Client Name"] || "--"}</td>
               <td style={tdStyle}>{client["Branch Name"] || "--"}</td>
-              <td style={tdStyle}>
-                {client.unread ? "🔴 Unread" : client.mail_date ? "✅ Read" : "📭 No new mail"}
-              </td>
+             <td style={tdStyle}>
+                {client.status === "Unread"
+                ? "🔴 Unread"
+                : client.status === "Read"
+                ? "✅ Read"
+                : "📭 No new mail"}
+                </td>
+
               <td style={tdStyle}>{client.mail_date || "--"}</td>
               <td style={tdStyle}>
                 <button

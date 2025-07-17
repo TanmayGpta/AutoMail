@@ -1,11 +1,13 @@
 from imap_tools import MailBox, AND
-from imap_tools import MailBoxFlags
+
 import pytesseract
 from PIL import Image
 import io, os, zipfile
 from crud import upsert_client_status
 from database import SessionLocal
 import re
+from client_loader import load_clients
+
 
 # 🔹 If PATH didn't work, set this:
 pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
@@ -15,7 +17,7 @@ PASSWORD = "xzql nrao yrwe wvys"
 IMAP_SERVER = "imap.gmail.com"
 
 # 🔸 Replace this with real list or fetch from DB later
-approved_ids = ['C123', 'C456', 'C789']
+approved_ids = [row["Client ID"] for row in load_clients()]
 
 def extract_client_id(text, approved_ids):
     for cid in approved_ids:
@@ -58,7 +60,9 @@ def process_emails():
                     zf.writestr(att.filename, att.payload)
 
             # ✅ Mark as unread in DB
-            upsert_client_status(db, client_id)
+            # Inside process_emails()
+            upsert_client_status(db, client_id, msg.date)
+
 
     db.close()
 
