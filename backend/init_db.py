@@ -1,7 +1,7 @@
 # backend/init_db.py
 
-from database import Base, engine
-from models import ClientMail # Import your model
+from .database import Base, engine
+from .models import ClientMail # Import your model
 
 print("Creating database and tables...")
 

@@ -2,10 +2,10 @@
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
-from crud import get_mail_statuses, mark_client_mails_as_read
-from database import SessionLocal
+from ..crud import get_mail_statuses, mark_client_mails_as_read
+from ..database import SessionLocal
 from fastapi.responses import FileResponse
-from client_loader import load_clients
+from ..client_loader import load_clients
 from typing import Optional
 import os
 

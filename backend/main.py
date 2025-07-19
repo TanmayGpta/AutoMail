@@ -1,27 +1,21 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from database import engine
-from models import Base
+from .api import routes
 
-# Import all models BEFORE creating tables
-from models import ClientMail  # This ensures the model is registered
+app = FastAPI(title="AutoMail API")
 
-# Import routers AFTER models
-from api.routes import router
-
-app = FastAPI()
-
-# Configure CORS
+# Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["http://localhost:3000"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Create tables (only once)
-Base.metadata.create_all(bind=engine)
+# Include the API routes
+app.include_router(routes.router)
 
-# Include router
-app.include_router(router)
+@app.get("/", tags=["Default"])
+def read_root():
+    return {"message": "Welcome to the AutoMail API"}
