@@ -1,10 +1,20 @@
-from sqlalchemy import Column, String, Boolean, DateTime
+# models.py
+
+from sqlalchemy import Column, String, Boolean, DateTime, Integer
 from database import Base
 from datetime import datetime
 
-class ClientMailStatus(Base):
-    __tablename__ = "client_mail_status"
-    client_id = Column(String, primary_key=True, index=True)
-    unread = Column(Boolean, default=True)
-    mail_date = Column(DateTime, default=datetime.utcnow)
-    last_updated = Column(DateTime, default=datetime.utcnow)
+class ClientMail(Base):
+    __tablename__ = "client_mails"
+
+    # A unique ID for each email record
+    id = Column(Integer, primary_key=True)
+    
+    # The client this email belongs to (not unique anymore)
+    client_id = Column(String, index=True)
+    
+    # Flag to check if this specific email has been marked as read
+    is_read = Column(Boolean, default=False)
+    
+    # The date the original email was sent
+    mail_date = Column(DateTime)

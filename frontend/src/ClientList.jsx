@@ -1,37 +1,53 @@
+// ClientList.jsx
+
 import React, { useEffect, useState } from "react";
 
 function ClientList() {
   const [clients, setClients] = useState([]);
 
+  // This useEffect hook now fetches data every 5 seconds.
   useEffect(() => {
-    fetch("http://localhost:8000/clients")
-      .then((res) => res.json())
-      .then((data) => setClients(data));
-  }, []);
+    const fetchData = () => {
+      console.log("Fetching latest client data..."); // For debugging
+      fetch("http://localhost:8000/clients")
+        .then((res) => res.json())
+        .then((data) => setClients(data))
+        .catch(err => console.error("Failed to fetch client data:", err));
+    };
+
+    fetchData(); // Fetch data immediately when the component loads
+
+    const intervalId = setInterval(fetchData, 5000); // Set up polling every 5 seconds
+
+    // This is a cleanup function that stops the polling when you navigate away.
+    // It's important for preventing errors and memory leaks.
+    return () => clearInterval(intervalId);
+  }, []); // The empty array ensures this effect runs only once to set up the interval.
 
   const markAsRead = (client_id) => {
     fetch(`http://localhost:8000/mark-read/${client_id}`, { method: "POST" })
       .then(() => {
+        // After marking as read, optimistically update the UI immediately
+        // instead of waiting for the next 5-second poll.
         setClients((prev) =>
           prev.map((client) =>
             client["Client ID"] === client_id
-              ? { ...client, unread: false }
+              ? { ...client, unread_count: 0 }
               : client
           )
         );
       });
   };
 
-  const checkZipExists = async (client_id) => {
-    try {
-      const res = await fetch(
-        `http://localhost:8000/download/${client_id}`,
-        { method: "HEAD" }
-      );
-      return res.ok;
-    } catch (e) {
-      return false;
+  const getStatusDisplay = (client) => {
+    if (client.unread_count > 0) {
+      const mailText = client.unread_count === 1 ? "Unread Mail" : "Unread Mails";
+      return `🔴 ${client.unread_count} ${mailText}`;
     }
+    if (client.mail_date) {
+      return "✅ All Read";
+    }
+    return "📭 No Mail History";
   };
 
   return (
@@ -53,15 +69,8 @@ function ClientList() {
             <tr key={client["Client ID"]}>
               <td style={tdStyle}>{client["Client ID"]}</td>
               <td style={tdStyle}>{client["Client Name"] || "--"}</td>
-              <td style={tdStyle}>{client["Branch Name"] || "--"}</td>
-             <td style={tdStyle}>
-                {client.status === "Unread"
-                ? "🔴 Unread"
-                : client.status === "Read"
-                ? "✅ Read"
-                : "📭 No new mail"}
-                </td>
-
+              <td style={thStyle}>{client["Branch Name"] || "--"}</td>
+              <td style={tdStyle}>{getStatusDisplay(client)}</td>
               <td style={tdStyle}>{client.mail_date || "--"}</td>
               <td style={tdStyle}>
                 <button
@@ -72,9 +81,9 @@ function ClientList() {
                 >
                   📁 Download Zip
                 </button>
-                {client.unread && (
+                {client.unread_count > 0 && (
                   <button onClick={() => markAsRead(client["Client ID"])} style={btnStyle}>
-                    ✅ Mark Read
+                    ✅ Mark All Read
                   </button>
                 )}
               </td>
