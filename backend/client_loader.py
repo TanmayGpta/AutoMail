@@ -1,6 +1,9 @@
+# In backend/client_loader.py
+from pathlib import Path
 import pandas as pd
 
 def load_clients():
-    df = pd.read_excel("data/clients.xlsx", dtype=str)
-    df.fillna("", inplace=True)
-    return df.to_dict(orient="records")
+    # Path now points to backend/data/clients.xlsx
+    excel_path = Path(__file__).parent / "data" / "clients.xlsx"
+    df = pd.read_excel(excel_path, dtype=str)
+    return df.to_dict("records")

@@ -1,9 +1,10 @@
-from imap_tools import MailBox, AND
+# email_reader.py
 
+from imap_tools import MailBox, AND
 import pytesseract
 from PIL import Image
 import io, os, zipfile
-from crud import upsert_client_status
+from crud import add_mail_record
 from database import SessionLocal
 import re
 from client_loader import load_clients
@@ -59,9 +60,9 @@ def process_emails():
                 for att in msg.attachments:
                     zf.writestr(att.filename, att.payload)
 
-            # ✅ Mark as unread in DB
-            # Inside process_emails()
-            upsert_client_status(db, client_id, msg.date)
+            # ✅ Add a new record for this mail in the DB
+            add_mail_record(db, client_id, msg.date)
+            print(f"✅ Logged new mail for client {client_id} on {msg.date.strftime('%Y-%m-%d')}")
 
 
     db.close()
