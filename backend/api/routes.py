@@ -2,7 +2,7 @@
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
-from ..crud import get_mail_statuses, mark_client_mails_as_read
+from ..crud import get_client_mail_details, mark_client_mails_as_read
 from ..database import SessionLocal
 from fastapi.responses import FileResponse
 from ..client_loader import load_clients
@@ -35,33 +35,21 @@ def download_zip(client_id: str):
 
 # 📊 Full client table (merged from Excel + DB with counts)
 @router.get("/clients")
-def get_clients(
-    branch: Optional[str] = Query(None),
-    db: Session = Depends(get_db)
-):
-    all_clients = load_clients()
-    
-    # Get the map of { client_id: { unread_count: X, mail_date: Y } }
-    status_map = get_mail_statuses(db)
+def get_clients(branch: Optional[str] = Query(None), db: Session = Depends(get_db)):
+    all_clients_from_file = load_clients()
+    mail_details_from_db = get_client_mail_details(db)
 
     enriched_clients = []
-    for client in all_clients:
+    for client in all_clients_from_file:
         cid = client.get("Client ID", "")
-        status_info = status_map.get(cid)
-
-        # New logic for determining status based on count
-        unread_count = 0
-        mail_date = None
-        if status_info:
-            unread_count = status_info.get("unread_count", 0)
-            mail_date = status_info.get("mail_date")
+        details = mail_details_from_db.get(cid, {"unread_count": 0, "mails": []})
 
         enriched_clients.append({
             "Client ID": cid,
             "Client Name": client.get("ClientName", ""),
             "Branch Name": client.get("Branch Name", ""),
-            "unread_count": unread_count,
-            "mail_date": mail_date,
+            "unread_count": details['unread_count'],
+            "mails": details['mails'] # Pass the full list of mails
         })
 
     if branch:

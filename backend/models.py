@@ -11,3 +11,4 @@ class ClientMail(Base):
     
     # ADD THIS LINE: To store the email's unique ID and prevent duplicates
     mail_uid = Column(String, unique=True, index=True)
+    gmail_message_id = Column(String, nullable=True)
